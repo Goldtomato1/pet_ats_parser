@@ -31,4 +31,4 @@ def pg_to_df():
     conn_string = 'postgresql://postgres:qawsed@127.0.0.1:5434/ats_parse'
     db = create_engine(conn_string)
     conn = db.connect()
-    return pd.read_sql_table('fact_region', conn)
+    return pd.read_sql_table('fact_region', conn, index_col='date')
