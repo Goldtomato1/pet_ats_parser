@@ -1,5 +1,5 @@
-from ats_parser import df_from_ats
-from df_db import df_to_pg, pg_to_df
+from ats_parser import df_from_ats, big_nodes_prices, sell_units
+from df_db import df_to_pg, pg_to_df, big_nodes_prices_to_pg, sell_units_to_pg
 from matplotlib import pyplot as plt
 
 
@@ -20,12 +20,16 @@ def max_values(df):
 def min_values(df):
     return df.resample('D').min().dropna().drop('hour', axis=1)
 
+# def main():
+#     df = df_from_ats()
+#     df_to_pg(df)
+#     df_from_db = pg_to_df()
+#     max_day = max_values(df_from_db)
+#     min_day = min_values(df_from_db)
+
 def main():
-    df = df_from_ats()
-    df_to_pg(df)
-    df_from_db = pg_to_df()
-    max_day = max_values(df_from_db)
-    min_day = min_values(df_from_db)
+    df = sell_units()
+    sell_units_to_pg(df)
 
 
 if __name__ == '__main__':

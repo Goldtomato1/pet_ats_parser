@@ -64,7 +64,6 @@ def big_nodes_prices_to_pg(df):
     df.to_sql('big_nodes_prices_pub', conn, index=False, if_exists='append')
 
 
-
 def sell_units_to_pg(df):
     conn_string = 'postgresql://postgres:qawsed@127.0.0.1:5434/ats_parse'
     db = create_engine(conn_string)
@@ -98,4 +97,3 @@ def sell_units_to_pg(df):
     '''
     cursor.execute(sql)
     df.to_sql('sell_units', conn, index=False, if_exists='append')
-
