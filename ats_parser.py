@@ -16,15 +16,19 @@ def options_browser():
     return driver
 
 
-def df_from_ats():
-    driver = options_browser()
-    url = 'https://www.atsenergo.ru/results/market/fact_region'
+def page_response(driver):
     delay = 10  # seconds
     try:
-        WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, 'xml-data-row')))
+        WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, 'reports_breadcrumb')))
         print("Page is ready!")
     except TimeoutException:
         print("Loading took too much time!")
+
+
+def df_from_ats():
+    driver = options_browser()
+    url = 'https://www.atsenergo.ru/results/market/fact_region'
+    page_response(driver)
 
     dwnld_link = driver.find_element("xpath", "//a[contains(text(),'Московская область')]").get_attribute('href')
     req = requests.get(dwnld_link, verify=False)
@@ -34,7 +38,7 @@ def df_from_ats():
 def big_nodes_prices():
     driver = options_browser()
     start_date = date(2022, 9, 1)
-    end_date = date(2022, 10, 31)
+    end_date = date(2022, 9, 2)
     dates = pd.date_range(start_date, end_date, freq='d').strftime('%Y%m%d').tolist()
     columns_name = ['date', 'hour', 'id_node', 'name_node', 'u_nom', 'u_fact', 'name_subj', 'price']
     df = pd.DataFrame(columns=columns_name)
@@ -42,12 +46,7 @@ def big_nodes_prices():
     for day in dates:
         url = f'https://www.atsenergo.ru/nreport?rname=big_nodes_prices_pub&region=eur&rdate={day}'
         driver.get(url)
-        delay = 10  # seconds
-        try:
-            WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, 'reports_breadcrumb')))
-            print("Page is ready!")
-        except TimeoutException:
-            print("Loading took too much time!")
+        page_response(driver)
 
         dwnld_link = driver.find_element("xpath", f"//a[contains(text(),'{day}_eur_big_nodes_prices_pub.xls')]").get_attribute('href')
         req = requests.get(dwnld_link, verify=False)
@@ -64,7 +63,7 @@ def big_nodes_prices():
 def sell_units():
     driver = options_browser()
     start_date = date(2022, 9, 1)
-    end_date = date(2022, 10, 31)
+    end_date = date(2022, 9, 2)
     dates = pd.date_range(start_date, end_date, freq='d').strftime('%Y%m%d').tolist()
     columns_name = ['date', 'hour', 'id_gen', 'name_gen', 'id_node', 'name_node', 'tech_min', 'technol_min',
                     'down_limit', 'plan_vol', 'up_limit', 'tech_max', 'technol_max']
@@ -73,12 +72,7 @@ def sell_units():
     for day in dates:
         url = f'https://www.atsenergo.ru/nreport?rname=carana_sell_units&region=eur&rdate={day}'
         driver.get(url)
-        delay = 10  # seconds
-        try:
-            WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, 'reports_files')))
-            print("Page is ready!")
-        except TimeoutException:
-            print("Loading took too much time!")
+        page_response(driver)
 
         dwnld_links = driver.find_elements("xpath", f"//a[contains(text(),'eur_sell_units.xls')]")
         for link in dwnld_links:
@@ -91,3 +85,6 @@ def sell_units():
                 v['date'] = datetime.strptime(day, '%Y%m%d').date()
                 df = pd.concat([df, v], ignore_index=True)
     return df
+
+df = sell_units()
+print(df)
