@@ -9,12 +9,16 @@ import requests
 from datetime import date, datetime
 
 
-def df_from_ats():
-    url = 'https://www.atsenergo.ru/results/market/fact_region'
+def options_browser():
     options = Options()
     options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
     driver = webdriver.Firefox(executable_path='geckodriver.exe', options=options)
-    driver.get(url)
+    return driver
+
+
+def df_from_ats():
+    driver = options_browser()
+    url = 'https://www.atsenergo.ru/results/market/fact_region'
     delay = 10  # seconds
     try:
         WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, 'xml-data-row')))
@@ -22,15 +26,13 @@ def df_from_ats():
     except TimeoutException:
         print("Loading took too much time!")
 
-    dwnld_link = driver.find_element_by_xpath("//a[contains(text(),'Московская область')]").get_attribute('href')
+    dwnld_link = driver.find_element("xpath", "//a[contains(text(),'Московская область')]").get_attribute('href')
     req = requests.get(dwnld_link, verify=False)
     return pd.read_excel(req.content, names=['date', 'hour', 'val'], skiprows=6)
 
 
 def big_nodes_prices():
-    options = Options()
-    options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
-    driver = webdriver.Firefox(executable_path='geckodriver.exe', options=options)
+    driver = options_browser()
     start_date = date(2022, 9, 1)
     end_date = date(2022, 10, 31)
     dates = pd.date_range(start_date, end_date, freq='d').strftime('%Y%m%d').tolist()
@@ -47,8 +49,7 @@ def big_nodes_prices():
         except TimeoutException:
             print("Loading took too much time!")
 
-        dwnld_link = driver.find_element_by_xpath(
-            f"//a[contains(text(),'{day}_eur_big_nodes_prices_pub.xls')]").get_attribute('href')
+        dwnld_link = driver.find_element("xpath", f"//a[contains(text(),'{day}_eur_big_nodes_prices_pub.xls')]").get_attribute('href')
         req = requests.get(dwnld_link, verify=False)
 
         dict_df = pd.read_excel(req.content, sheet_name=None, names=columns_name[2:], usecols='A:F', skiprows=2)
@@ -61,9 +62,7 @@ def big_nodes_prices():
 
 
 def sell_units():
-    options = Options()
-    options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
-    driver = webdriver.Firefox(executable_path='geckodriver.exe', options=options)
+    driver = options_browser()
     start_date = date(2022, 9, 1)
     end_date = date(2022, 10, 31)
     dates = pd.date_range(start_date, end_date, freq='d').strftime('%Y%m%d').tolist()
@@ -81,20 +80,14 @@ def sell_units():
         except TimeoutException:
             print("Loading took too much time!")
 
-        dwnld_link = driver.find_element_by_xpath(
-            f"//a[contains(text(),'{day}_MOSENERG_eur_sell_units.xls')]").get_attribute('href')
-        req = requests.get(dwnld_link, verify=False)
-
-        df_excel = pd.read_excel(req.content, header=None, skiprows=7, skipfooter=1)
-
-        for h, i in zip(range(0, 24), range(4, 178, 7)):
-            v = pd.concat([df_excel.iloc[:, 0:4], df_excel.iloc[:, i:i + 7]], axis=1)
-            v.columns = columns_name[2:]
-            v['hour'] = h
-            v['date'] = datetime.strptime(day, '%Y%m%d').date()
-
-            df = pd.concat([df, v], ignore_index=True)
+        dwnld_links = driver.find_elements("xpath", f"//a[contains(text(),'eur_sell_units.xls')]")
+        for link in dwnld_links:
+            req = requests.get(link.get_attribute('href'), verify=False)
+            df_excel = pd.read_excel(req.content, header=None, skiprows=7, skipfooter=1)
+            for h, i in zip(range(0, 24), range(4, 178, 7)):
+                v = pd.concat([df_excel.iloc[:, 0:4], df_excel.iloc[:, i:i + 7]], axis=1)
+                v.columns = columns_name[2:]
+                v['hour'] = h
+                v['date'] = datetime.strptime(day, '%Y%m%d').date()
+                df = pd.concat([df, v], ignore_index=True)
     return df
-
-
-

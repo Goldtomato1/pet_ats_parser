@@ -1,4 +1,4 @@
-from ats_parser import df_from_ats, big_nodes_prices, sell_units
+from ats_parser import df_from_ats, big_nodes_prices, sell_units1
 from df_db import df_to_pg, pg_to_df, big_nodes_prices_to_pg, sell_units_to_pg
 from matplotlib import pyplot as plt
 
@@ -28,7 +28,7 @@ def min_values(df):
 #     min_day = min_values(df_from_db)
 
 def main():
-    df = sell_units()
+    df = sell_units1()
     sell_units_to_pg(df)
 
 
