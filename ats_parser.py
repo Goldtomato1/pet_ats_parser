@@ -28,6 +28,7 @@ def page_response(driver):
 def df_from_ats():
     driver = options_browser()
     url = 'https://www.atsenergo.ru/results/market/fact_region'
+    driver.get(url)
     page_response(driver)
 
     dwnld_link = driver.find_element("xpath", "//a[contains(text(),'Московская область')]").get_attribute('href')
@@ -85,6 +86,3 @@ def sell_units():
                 v['date'] = datetime.strptime(day, '%Y%m%d').date()
                 df = pd.concat([df, v], ignore_index=True)
     return df
-
-df = sell_units()
-print(df)
